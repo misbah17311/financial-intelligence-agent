@@ -1,3 +1,13 @@
+---
+title: Financial Intelligence Agent
+emoji: 📊
+colorFrom: indigo
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # Financial Intelligence Agent
 
 A production-grade multi-agent AI system for financial Q&A. Combines structured SQL data (2,100 company records) with hybrid semantic search over 110K+ news articles, protected by a layered guardrail system.
