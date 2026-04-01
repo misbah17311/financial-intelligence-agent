@@ -1,0 +1,13 @@
+venv/
+__pycache__/
+*.pyc
+.env
+data/raw/
+data/processed/
+*.egg-info/
+.chroma/
+*.db
+*.duckdb
+*.log
+.DS_Store
+*.pkl

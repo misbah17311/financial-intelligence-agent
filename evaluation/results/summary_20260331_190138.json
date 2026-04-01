@@ -1,0 +1,20 @@
+{
+  "total_queries": 20,
+  "response_rate": "100.0%",
+  "confidence_distribution": {
+    "HIGH": 13,
+    "MEDIUM": 7
+  },
+  "tool_routing_accuracy": "100.0%",
+  "answer_quality": {
+    "relevance": 5,
+    "accuracy": 4.6,
+    "completeness": 4.5,
+    "clarity": 4.85,
+    "overall": 4.74
+  },
+  "latency": {
+    "median_seconds": 10.73,
+    "p95_seconds": 35.03
+  }
+}

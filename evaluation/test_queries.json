@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "query": "What is Apple's average revenue from 2020 to 2024?",
+    "type": "sql_aggregation",
+    "expected_tool": "sql_query",
+    "notes": "Simple single-company aggregation"
+  },
+  {
+    "id": 2,
+    "query": "Compare the average revenue of Technology vs Healthcare sectors across all years",
+    "type": "comparison",
+    "expected_tool": "sql_query",
+    "notes": "Cross-sector comparison with aggregation"
+  },
+  {
+    "id": 3,
+    "query": "Which company had the highest net income in Q4 2024?",
+    "type": "sql_lookup",
+    "expected_tool": "sql_query",
+    "notes": "Filtering + sorting"
+  },
+  {
+    "id": 4,
+    "query": "What are analysts saying about the technology sector's outlook?",
+    "type": "semantic",
+    "expected_tool": "semantic_search",
+    "notes": "Pure semantic / opinion search"
+  },
+  {
+    "id": 5,
+    "query": "How has NVIDIA's revenue changed year over year from 2020 to 2024?",
+    "type": "trend",
+    "expected_tool": "sql_query",
+    "notes": "Time-series trend for a specific company"
+  },
+  {
+    "id": 6,
+    "query": "Which sector had the worst performance in 2022 and what were the reasons?",
+    "type": "multi_hop",
+    "expected_tool": "both",
+    "notes": "Needs SQL for 'worst performance' + search for 'reasons'"
+  },
+  {
+    "id": 7,
+    "query": "Compare Goldman Sachs vs JPMorgan Chase in terms of revenue and market cap across 2023",
+    "type": "comparison",
+    "expected_tool": "sql_query",
+    "notes": "Head-to-head company comparison"
+  },
+  {
+    "id": 8,
+    "query": "What is the total market cap of all Energy sector companies in Q1 2024?",
+    "type": "sql_aggregation",
+    "expected_tool": "sql_query",
+    "notes": "Sector-level SUM aggregation"
+  },
+  {
+    "id": 9,
+    "query": "What financial news is there about Tesla?",
+    "type": "semantic",
+    "expected_tool": "semantic_search",
+    "notes": "Company-specific news retrieval"
+  },
+  {
+    "id": 10,
+    "query": "List the top 3 companies by revenue in each sector for 2024",
+    "type": "sql_complex",
+    "expected_tool": "sql_query",
+    "notes": "Window function / GROUP BY with ranking"
+  },
+  {
+    "id": 11,
+    "query": "What is the trend in Consumer sector profit margins from 2020 to 2024?",
+    "type": "multi_hop",
+    "expected_tool": "both",
+    "notes": "Needs SQL for margin calculation + possible search for context"
+  },
+  {
+    "id": 12,
+    "query": "How does Microsoft's market cap compare to the average of all Tech companies?",
+    "type": "comparison",
+    "expected_tool": "sql_query",
+    "notes": "Individual vs group comparison"
+  },
+  {
+    "id": 13,
+    "query": "What risks are investors concerned about in the banking sector?",
+    "type": "semantic",
+    "expected_tool": "semantic_search",
+    "notes": "Sentiment/opinion search about a sector"
+  },
+  {
+    "id": 14,
+    "query": "Which quarter typically has the highest revenue across all sectors and why?",
+    "type": "multi_hop",
+    "expected_tool": "both",
+    "notes": "Seasonal pattern detection + explanation"
+  },
+  {
+    "id": 15,
+    "query": "Show the revenue growth rate of Amazon compared to Walmart from 2021 to 2024",
+    "type": "trend",
+    "expected_tool": "sql_query",
+    "notes": "Cross-sector company comparison with growth calculation"
+  },
+  {
+    "id": 16,
+    "query": "What happened in the pharmaceutical industry recently?",
+    "type": "semantic",
+    "expected_tool": "semantic_search",
+    "notes": "Broad topic search"
+  },
+  {
+    "id": 17,
+    "query": "What is the average market cap of Finance sector companies and how does it compare to Technology?",
+    "type": "comparison",
+    "expected_tool": "sql_query",
+    "notes": "Dual-sector comparison"
+  },
+  {
+    "id": 18,
+    "query": "Can you explain why some companies in Energy had declining revenue in 2023?",
+    "type": "multi_hop",
+    "expected_tool": "both",
+    "notes": "Identify declining companies (SQL) then find reasons (search)"
+  },
+  {
+    "id": 19,
+    "query": "What is the GDP of France in 2024?",
+    "type": "out_of_scope",
+    "expected_tool": "none",
+    "notes": "Should correctly identify this is outside the dataset"
+  },
+  {
+    "id": 20,
+    "query": "Find companies with net income greater than revenue — is that even possible in our data?",
+    "type": "data_quality",
+    "expected_tool": "sql_query",
+    "notes": "Edge case / data exploration query"
+  }
+]

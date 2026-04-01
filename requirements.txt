@@ -1,0 +1,42 @@
+# core LLM + agent framework
+langchain>=0.3.0
+langchain-openai>=0.2.0
+langchain-anthropic>=0.2.0
+langchain-community>=0.3.0
+langgraph>=0.2.0
+
+# vector store
+chromadb>=0.5.0
+
+# embeddings (local, no API needed)
+sentence-transformers>=3.0.0
+
+# structured data / analytics DB
+duckdb>=1.0.0
+
+# keyword search
+rank-bm25>=0.2.2
+
+# reranking
+torch>=2.0.0
+
+# data handling
+pandas>=2.0.0
+pyarrow>=14.0.0
+datasets>=2.18.0
+
+# ui
+streamlit>=1.35.0
+
+# web api
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+
+# eval + metrics
+ragas>=0.1.10
+rouge-score>=0.1.2
+
+# utilities
+python-dotenv>=1.0.0
+tqdm>=4.66.0
+loguru>=0.7.0
