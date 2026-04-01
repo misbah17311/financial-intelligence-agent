@@ -1,8 +1,5 @@
-"""
-LLM factory — returns the right chat model based on .env config.
-Swap providers by changing LLM_PROVIDER in your .env file.
-Everything downstream just calls get_llm() and doesn't care which provider it is.
-"""
+# LLM factory — swap providers by changing LLM_PROVIDER in .env
+# everything downstream just calls get_llm() and doesn't care which one it is
 
 from functools import lru_cache
 from src.config import (
@@ -13,10 +10,7 @@ from src.config import (
 
 @lru_cache(maxsize=1)
 def get_llm(temperature: float = 0.0):
-    """
-    Build and return the LLM instance. Cached so we don't re-init on every call.
-    Temperature 0 keeps answers deterministic for eval reproducibility.
-    """
+    # cached LLM instance — temp 0 for deterministic eval results
     if LLM_PROVIDER == "openai":
         from langchain_openai import ChatOpenAI
         return ChatOpenAI(

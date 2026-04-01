@@ -1,12 +1,5 @@
-"""
-FastAPI backend for the Financial Intelligence Agent.
-
-Endpoints:
-  POST /api/query     — ask a question, get an answer
-  GET  /api/health    — health check
-  GET  /api/examples  — sample queries for the UI
-  GET  /              — serves the frontend
-"""
+# FastAPI backend for the Financial Intelligence Agent
+# endpoints: POST /api/query, GET /api/health, GET /api/examples, GET /
 
 import time
 import os
@@ -27,10 +20,15 @@ from src.config import LLM_PROVIDER, LLM_MODEL, DATASET_DESCRIPTION
 from src.logger import logger
 
 
-# preload heavy models on startup so first query isn't slow
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # auto-run setup if data doesn't exist yet (for Docker / HF Spaces)
+# Track readiness so /api/health can respond instantly while models warm up
+_ready = False
+
+def _is_ready():
+    return _ready
+
+def _warmup_sync():
+    # run data checks and warm up models in background
+    global _ready
     from src.config import DUCKDB_PATH, CHROMA_DIR
     if not DUCKDB_PATH.exists() or not CHROMA_DIR.exists():
         logger.info("Data not found — running setup pipeline (this takes ~15 min on first boot)...")
@@ -49,6 +47,14 @@ async def lifespan(app: FastAPI):
         logger.info("Models loaded, ready to serve.")
     except Exception as e:
         logger.warning(f"Warmup failed (non-fatal): {e}")
+    _ready = True
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Run warmup in a background thread so the server accepts connections immediately
+    import threading
+    t = threading.Thread(target=_warmup_sync, daemon=True)
+    t.start()
     yield
 
 
@@ -76,6 +82,8 @@ class QueryResponse(BaseModel):
     blocked_by: str | None = None
     block_message: str | None = None
     plan: str = ""
+    sql_queries: list[str] = []
+    sources_used: list[str] = []
     latency_seconds: float = 0.0
 
 
@@ -83,7 +91,11 @@ class QueryResponse(BaseModel):
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "llm": f"{LLM_PROVIDER}/{LLM_MODEL}"}
+    return {
+        "status": "ok" if _is_ready() else "warming_up",
+        "llm": f"{LLM_PROVIDER}/{LLM_MODEL}",
+        "ready": _is_ready(),
+    }
 
 
 @app.get("/api/examples")
@@ -113,6 +125,18 @@ async def examples():
 @app.post("/api/query", response_model=QueryResponse)
 async def query(req: QueryRequest):
     start = time.time()
+
+    # Block queries while models are still loading
+    if not _is_ready():
+        return QueryResponse(
+            answer="",
+            confidence="N/A",
+            guardrails=[],
+            blocked=True,
+            blocked_by="system",
+            block_message="Models are still warming up. Please wait a moment and try again.",
+            latency_seconds=round(time.time() - start, 2),
+        )
 
     # --- input guardrails ---
     validation = validate_input(req.question)
@@ -152,11 +176,23 @@ async def query(req: QueryRequest):
     else:
         guardrail_details.append(GuardrailDetail(name="response_validation", passed=True))
 
+    # extract source labels from retrieved data
+    sources_used = []
+    retrieved_raw = result.get("retrieved_data", "")
+    if "sql_query" in retrieved_raw:
+        sources_used.append("SQL Database")
+    if "semantic_search" in retrieved_raw:
+        sources_used.append("News Articles")
+    if not sources_used:
+        sources_used.append("Knowledge Base")
+
     return QueryResponse(
         answer=result["answer"],
         confidence=result.get("confidence", "UNKNOWN"),
         guardrails=guardrail_details,
         plan=result.get("plan", ""),
+        sql_queries=result.get("sql_queries", []),
+        sources_used=sources_used,
         latency_seconds=round(time.time() - start, 2),
     )
 

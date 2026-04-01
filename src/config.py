@@ -1,8 +1,5 @@
-"""
-Central config for the entire project.
-Reads from .env so we can swap LLM providers, tweak retrieval params,
-etc. without touching any code.
-"""
+# Central config — reads everything from .env so we can swap
+# LLM providers, tweak retrieval params, etc. without touching code
 
 import os
 from pathlib import Path

@@ -1,8 +1,5 @@
-"""
-Logging setup using loguru.
-We log queries, retrieved docs, agent decisions — basically the whole
-pipeline trace so we can debug and evaluate.
-"""
+# logging setup with loguru — traces the full pipeline
+# (queries, retrieved docs, agent decisions) for debugging
 
 import sys
 from loguru import logger

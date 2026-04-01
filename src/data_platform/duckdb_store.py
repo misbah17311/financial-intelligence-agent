@@ -1,7 +1,5 @@
-"""
-DuckDB wrapper — loads the company fundamentals parquet into a SQL table
-and provides a safe query interface for the agent.
-"""
+# DuckDB wrapper — loads company fundamentals into a SQL table
+# and exposes a safe read-only query interface for the agent
 
 import duckdb
 import pandas as pd
@@ -14,7 +12,7 @@ _read_only = True  # default to read-only so multiple processes can share
 
 
 def get_connection(write=False):
-    """Lazy singleton connection to the DuckDB database."""
+    # lazy singleton — read-only by default so multiple processes can share
     global _conn, _read_only
     if _conn is not None and write and _read_only:
         # need to upgrade to writable — close and reconnect
@@ -29,10 +27,7 @@ def get_connection(write=False):
 
 
 def init_tables():
-    """
-    Create the companies table from the preprocessed parquet file.
-    Idempotent — safe to call multiple times.
-    """
+    # create the companies table from preprocessed parquet (idempotent)
     conn = get_connection(write=True)
     parquet_path = PROCESSED_DATA_DIR / "company_fundamentals.parquet"
 
@@ -54,10 +49,8 @@ def init_tables():
 
 
 def run_query(sql: str) -> pd.DataFrame:
-    """
-    Execute a read-only SQL query and return results as a DataFrame.
-    We only allow SELECT statements to prevent any writes from the agent.
-    """
+    # execute a read-only SQL query, returns a DataFrame
+    # only SELECT/WITH/EXPLAIN allowed — no writes from the agent
     cleaned = sql.strip().rstrip(";").strip()
 
     # basic safety check — only allow read queries
@@ -78,10 +71,7 @@ def run_query(sql: str) -> pd.DataFrame:
 
 
 def get_schema_info() -> str:
-    """
-    Returns a human-readable schema description for the planner agent.
-    This helps the LLM write correct SQL.
-    """
+    # human-readable schema for the planner agent so it can write correct SQL
     conn = get_connection()
     try:
         cols = conn.execute("DESCRIBE companies").fetchdf()

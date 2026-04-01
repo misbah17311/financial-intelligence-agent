@@ -1,9 +1,6 @@
-"""
-ChromaDB vector store — embeds financial news chunks and provides
-semantic (meaning-based) search.
-
-Uses sentence-transformers locally so there's no API cost for embeddings.
-"""
+# ChromaDB vector store — embeds financial news chunks
+# and provides semantic (meaning-based) search
+# uses sentence-transformers locally, no API cost for embeddings
 
 import chromadb
 from chromadb.config import Settings
@@ -23,7 +20,7 @@ COLLECTION_NAME = "financial_articles"
 
 
 def _get_embed_model():
-    """Lazy-load the embedding model. ~80MB download on first run."""
+    # lazy-load embedding model (~80MB download first time)
     global _embed_model
     if _embed_model is None:
         logger.info(f"Loading embedding model: {EMBEDDING_MODEL}")
@@ -32,7 +29,7 @@ def _get_embed_model():
 
 
 def get_client():
-    """Persistent ChromaDB client — data survives restarts."""
+    # persistent ChromaDB client — data survives restarts
     global _client
     if _client is None:
         CHROMA_DIR.mkdir(parents=True, exist_ok=True)
@@ -41,7 +38,7 @@ def get_client():
 
 
 def get_collection():
-    """Get or create the main articles collection."""
+    # get or create the main articles collection
     global _collection
     if _collection is None:
         client = get_client()
@@ -53,10 +50,7 @@ def get_collection():
 
 
 def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
-    """
-    Split a piece of text into overlapping chunks.
-    We split by sentences where possible to avoid cutting mid-thought.
-    """
+    # split text into overlapping chunks, trying to break on sentence boundaries
     if len(text) <= chunk_size:
         return [text]
 
@@ -84,12 +78,8 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
 
 
 def build_index(force_rebuild: bool = False):
-    """
-    Read the preprocessed news parquet, chunk the articles,
-    embed them, and store in ChromaDB.
-
-    Skips if the collection already has data (unless force_rebuild=True).
-    """
+    # read preprocessed news, chunk it, embed it, store in ChromaDB
+    # skips if collection already has data (unless force_rebuild)
     collection = get_collection()
 
     if collection.count() > 0 and not force_rebuild:
@@ -153,10 +143,7 @@ def build_index(force_rebuild: bool = False):
 
 
 def search(query: str, n_results: int = 10) -> list[dict]:
-    """
-    Semantic search — finds chunks whose meaning is closest to the query.
-    Returns list of dicts with 'text', 'score', and 'metadata'.
-    """
+    # semantic search — finds chunks closest in meaning to the query
     collection = get_collection()
     model = _get_embed_model()
 

@@ -1,16 +1,6 @@
-"""
-Safety guardrails for the Financial Intelligence Agent.
-
-These run BEFORE and AFTER the agent pipeline to catch:
-  - SQL injection attempts
-  - Prompt injection / jailbreak attempts
-  - PII in queries (credit cards, SSNs, etc.)
-  - Off-topic queries that waste compute
-  - Toxic or harmful content in responses
-
-Each check returns a (passed: bool, reason: str) tuple.
-The pipeline short-circuits on the first failure — no LLM calls happen.
-"""
+# Safety guardrails — runs before and after the agent pipeline
+# catches SQL injection, prompt injection, PII, off-topic queries, bad responses
+# pipeline short-circuits on first failure so no LLM calls are wasted
 
 import re
 from src.logger import logger
@@ -34,7 +24,7 @@ _SQL_INJECTION_PATTERNS = [
 ]
 
 def check_sql_injection(query: str) -> tuple[bool, str]:
-    """Screen user input for SQL injection patterns."""
+    # look for common SQL injection patterns in user input
     upper = query.upper()
     for pattern in _SQL_INJECTION_PATTERNS:
         if re.search(pattern, upper):
@@ -70,7 +60,7 @@ _INJECTION_PHRASES = [
 ]
 
 def check_prompt_injection(query: str) -> tuple[bool, str]:
-    """Detect attempts to override the agent's instructions."""
+    # detect attempts to hijack or override agent instructions
     lower = query.lower()
     for pattern in _INJECTION_PHRASES:
         if re.search(pattern, lower):
@@ -96,7 +86,7 @@ _PII_PATTERNS = [
 ]
 
 def check_pii(query: str) -> tuple[bool, str]:
-    """Block queries containing personally identifiable information."""
+    # block queries that have personal info like SSNs, card numbers, etc.
     for pattern, pii_type in _PII_PATTERNS:
         if re.search(pattern, query):
             logger.warning(f"PII detected ({pii_type}) in query: '{query[:60]}'")
@@ -123,7 +113,7 @@ _OFFTOPIC_PATTERNS = [
 ]
 
 def check_topic_relevance(query: str) -> tuple[bool, str]:
-    """Reject queries that are clearly outside financial domain."""
+    # reject clearly off-topic stuff (cooking, weather, poems, etc.)
     lower = query.lower()
     for pattern in _OFFTOPIC_PATTERNS:
         if re.search(pattern, lower):
@@ -144,7 +134,7 @@ def check_topic_relevance(query: str) -> tuple[bool, str]:
 MAX_QUERY_LENGTH = 2000
 
 def check_input_length(query: str) -> tuple[bool, str]:
-    """Prevent absurdly long inputs that could be prompt stuffing."""
+    # prevent huge inputs that could be prompt stuffing
     if len(query) > MAX_QUERY_LENGTH:
         return False, (
             f"Your query is {len(query)} characters — the maximum is {MAX_QUERY_LENGTH}. "
@@ -166,7 +156,7 @@ _RESPONSE_REDFLAGS = [
 ]
 
 def validate_response(response: str) -> tuple[bool, str]:
-    """Check the agent's output for signs of prompt leaking or weirdness."""
+    # check output for prompt leaking or weird AI disclaimers
     for pattern, issue in _RESPONSE_REDFLAGS:
         if re.search(pattern, response):
             logger.warning(f"Response guardrail triggered: {issue}")
@@ -189,13 +179,8 @@ _INPUT_CHECKS = [
 
 
 def validate_input(query: str) -> dict:
-    """
-    Run all input guardrails. Returns a dict with:
-      - passed: bool — True if all checks pass
-      - blocked_by: str — name of the guardrail that blocked (if any)
-      - message: str — user-friendly explanation (if blocked)
-      - checks_run: list — all guardrails that were evaluated
-    """
+    # run all input guardrails in order (cheap checks first)
+    # returns: passed, blocked_by, message, checks_run
     checks_run = []
     for name, check_fn in _INPUT_CHECKS:
         passed, message = check_fn(query)

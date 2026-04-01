@@ -1,14 +1,5 @@
-"""
-Multi-agent system built on LangGraph.
-
-Four agents collaborate in a pipeline:
-  Planner  → figures out what data to fetch and how
-  Retriever → calls the right tools (SQL, semantic search)
-  Analyst  → synthesizes everything into a coherent answer
-  Critic   → checks the answer for accuracy and completeness
-
-The flow is: Planner → Retriever → Analyst → Critic → (done or retry)
-"""
+# Multi-agent pipeline built on LangGraph.
+# Four agents: Planner → Retriever → Analyst → Critic → (done or retry)
 
 import json
 from typing import TypedDict, Annotated, Literal
@@ -28,7 +19,7 @@ from src.logger import logger
 # the same code the @tool-decorated functions call, minus the wrapper.
 
 def _run_sql(query: str) -> str:
-    """Run a SQL query, same logic as the sql_query tool."""
+    # runs a SQL query — same logic as the sql_query tool
     logger.info(f"Direct call: sql_query({query[:100]}...)")
     try:
         df = duckdb_run_query(query)
@@ -47,7 +38,7 @@ def _run_sql(query: str) -> str:
 
 
 def _run_search(query: str) -> str:
-    """Run hybrid search, same logic as the semantic_search tool."""
+    # hybrid search — same logic as semantic_search tool
     logger.info(f"Direct call: semantic_search({query[:100]}...)")
     try:
         results = hybrid_search(query)
@@ -149,7 +140,7 @@ Default to APPROVED unless there is a clear factual error."""
 # -- agent node functions --
 
 def planner_node(state: AgentState) -> dict:
-    """Analyze the query and produce an execution plan."""
+    # analyze the query and figure out an execution plan
     logger.info(f"Planner: analyzing query")
     llm = get_llm()
 
@@ -170,7 +161,7 @@ def planner_node(state: AgentState) -> dict:
 
 
 def retriever_node(state: AgentState) -> dict:
-    """Execute the plan by calling the appropriate tools."""
+    # execute the plan — call SQL/search tools as needed
     logger.info("Retriever: executing plan")
     llm = get_llm()
 
@@ -239,7 +230,7 @@ def retriever_node(state: AgentState) -> dict:
 
 
 def analyst_node(state: AgentState) -> dict:
-    """Synthesize the retrieved data into a coherent answer."""
+    # take all retrieved data and produce a coherent answer
     logger.info("Analyst: synthesizing answer")
     llm = get_llm()
 
@@ -260,7 +251,7 @@ def analyst_node(state: AgentState) -> dict:
 
 
 def critic_node(state: AgentState) -> dict:
-    """Review the draft answer for accuracy and completeness."""
+    # review the draft for factual accuracy
     logger.info("Critic: reviewing answer")
     llm = get_llm()
 
@@ -281,7 +272,7 @@ def critic_node(state: AgentState) -> dict:
 
 
 def decide_after_critic(state: AgentState) -> Literal["finalize", "retry"]:
-    """Route based on critic's verdict — approve or send back for revision."""
+    # route based on critic verdict — approve or loop back
     critique = state.get("critique", "")
     retry_count = state.get("retry_count", 0)
 
@@ -297,7 +288,7 @@ def decide_after_critic(state: AgentState) -> Literal["finalize", "retry"]:
 
 
 def retry_node(state: AgentState) -> dict:
-    """Take critic feedback and revise the answer."""
+    # take critic's feedback and revise
     logger.info(f"Retry: incorporating feedback (attempt {state.get('retry_count', 0) + 1})")
     llm = get_llm()
 
@@ -320,7 +311,7 @@ def retry_node(state: AgentState) -> dict:
 
 
 def finalize_node(state: AgentState) -> dict:
-    """Package the final answer with metadata."""
+    # package everything up with confidence metadata
     answer = state.get("draft_answer", "I wasn't able to generate an answer.")
 
     # attach a confidence note if retrieval confidence was low
@@ -339,9 +330,7 @@ def finalize_node(state: AgentState) -> dict:
 
 
 def build_graph() -> StateGraph:
-    """
-    Wire up the multi-agent pipeline as a LangGraph state machine.
-    """
+    # wire up the multi-agent pipeline as a LangGraph state machine
     graph = StateGraph(AgentState)
 
     # add all the nodes
@@ -377,7 +366,7 @@ agent_graph = None
 
 
 def get_agent():
-    """Get the compiled agent graph (lazy init)."""
+    # lazy init — compile only once
     global agent_graph
     if agent_graph is None:
         agent_graph = build_graph()
@@ -385,10 +374,7 @@ def get_agent():
 
 
 def run_query(query: str) -> dict:
-    """
-    Main entry point — send a question, get an answer.
-    Returns dict with 'final_answer', 'confidence', and trace info.
-    """
+    # main entry point — question in, answer out
     agent = get_agent()
 
     initial_state = {
@@ -407,10 +393,32 @@ def run_query(query: str) -> dict:
     logger.info(f"Running agent pipeline for: {query[:100]}...")
     result = agent.invoke(initial_state)
 
+    # extract any SQL queries from retrieved_data for display
+    retrieved = result.get("retrieved_data", "")
+    sql_queries = []
+    import re as _re
+    for match in _re.finditer(r'Step \d+ \(sql_query\).*?\n(.*?)(?=\n---|\'$)', retrieved, _re.DOTALL):
+        pass
+    # simpler: find SQL steps from the plan
+    plan_text = result.get("plan", "")
+    try:
+        json_match = _re.search(r'\[.*\]', plan_text, _re.DOTALL)
+        if json_match:
+            steps = json.loads(json_match.group())
+            for s in steps:
+                if s.get("tool") == "sql_query":
+                    inp = s.get("input", "")
+                    if isinstance(inp, str) and inp.strip().upper().startswith(("SELECT", "WITH")):
+                        sql_queries.append(inp.strip())
+    except Exception:
+        pass
+
     return {
         "answer": result.get("final_answer", "No answer generated."),
         "confidence": result.get("confidence", "UNKNOWN"),
         "plan": result.get("plan", ""),
         "critique": result.get("critique", ""),
         "retries": result.get("retry_count", 0),
+        "sql_queries": sql_queries,
+        "retrieved_data": retrieved,
     }

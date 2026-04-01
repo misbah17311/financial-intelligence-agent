@@ -1,16 +1,6 @@
-"""
-Downloads and preprocesses the raw datasets.
-
-We pull two things:
-  1. Company fundamentals — structured financial data (revenue, profit etc.)
-     Source: Kaggle / HuggingFace pre-cleaned CSVs
-  2. Financial news articles — unstructured text for semantic search
-     Source: HuggingFace financial_phrasebank + other financial news datasets
-
-The goal is to end up with:
-  - A clean CSV of company financials → goes into DuckDB
-  - A clean CSV of article texts with metadata → goes into ChromaDB + BM25
-"""
+# Downloads and preprocesses the raw datasets:
+# 1. Financial news articles from HuggingFace → ChromaDB + BM25
+# 2. Company fundamentals (synthetic but realistic) → DuckDB
 
 import pandas as pd
 from pathlib import Path
@@ -20,7 +10,7 @@ from src.logger import logger
 
 
 def _try_load_dataset(name, split="train", **kwargs):
-    """Helper to load a HuggingFace dataset with fallback error handling."""
+    # helper to load a HF dataset with fallback if it fails
     from datasets import load_dataset
     try:
         ds = load_dataset(name, split=split, **kwargs)
@@ -31,11 +21,8 @@ def _try_load_dataset(name, split="train", **kwargs):
 
 
 def download_financial_news():
-    """
-    Pull financial news articles from HuggingFace.
-    We use a mix of large and small datasets to hit 100k+ real rows.
-    Only falls back to synthetic data if all downloads fail badly.
-    """
+    # pull financial news from HuggingFace (mix of large + small datasets)
+    # only falls back to synthetic if downloads fail badly
     from datasets import load_dataset
 
     logger.info("Downloading financial news datasets from HuggingFace...")
@@ -140,11 +127,8 @@ def download_financial_news():
 
 
 def _generate_synthetic_news(n_rows: int) -> pd.DataFrame:
-    """
-    Generate realistic-sounding financial news snippets.
-    These are template-based with randomized companies, numbers, and phrasing
-    so the embedding model has meaningful text to index.
-    """
+    # generate template-based financial news snippets with randomized
+    # companies, numbers, and phrasing for meaningful embedding text
     import numpy as np
     np.random.seed(42)
 
@@ -272,12 +256,8 @@ def _generate_synthetic_news(n_rows: int) -> pd.DataFrame:
 
 
 def generate_company_fundamentals():
-    """
-    Generate synthetic but realistic company fundamentals data.
-    We do this because clean, large-scale company financial CSVs with
-    revenue/profit by quarter aren't freely available in one place.
-    The data follows realistic distributions and sector patterns.
-    """
+    # generate synthetic but realistic company fundamentals
+    # covers 105 companies across 5 sectors, 2020–2024 quarterly
     import numpy as np
 
     logger.info("Generating company fundamentals dataset...")
@@ -414,7 +394,7 @@ def generate_company_fundamentals():
 
 
 def run_ingestion():
-    """Main entry point — downloads and preps everything."""
+    # main entry point — downloads and preps everything
     PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
     news_df = download_financial_news()

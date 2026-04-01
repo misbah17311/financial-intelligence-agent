@@ -1,14 +1,6 @@
-"""
-Evaluation runner — tests the agent against a curated set of queries
-and produces metrics on retrieval quality and answer quality.
-
-Metrics:
-  - Response rate: did the agent produce an answer?
-  - Confidence distribution: how often HIGH vs MEDIUM vs LOW
-  - Latency: p50 and p95 response times
-  - LLM-as-judge: uses the LLM itself to grade answer quality (1-5)
-  - Tool accuracy: did the agent use the right tool for each query type?
-"""
+# Evaluation runner — tests the agent against curated queries
+# and grades answers using LLM-as-judge (1-5 scale)
+# tracks: response rate, confidence dist, latency, tool accuracy
 
 import json
 import time
@@ -34,10 +26,7 @@ def load_test_queries() -> list[dict]:
 
 
 def grade_answer(query: str, answer: str, query_type: str) -> dict:
-    """
-    Use the LLM to grade the answer on a 1-5 scale.
-    This is a standard evaluation technique — the LLM acts as a judge.
-    """
+    # use the LLM itself to grade answer quality on 1-5 scale
     llm = get_llm()
     grading_prompt = f"""Grade this answer on a scale of 1-5 for each criterion.
     
@@ -70,7 +59,7 @@ Respond in JSON format only:
 
 
 def run_evaluation():
-    """Run the full evaluation suite."""
+    # run the full evaluation suite across test queries
     queries = load_test_queries()
     results = []
     latencies = []

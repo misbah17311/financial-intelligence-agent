@@ -1,8 +1,5 @@
-"""
-BM25 keyword search index over the same news chunks.
-Complements ChromaDB's semantic search — catches exact keyword matches
-that vector search sometimes misses.
-"""
+# BM25 keyword search over news chunks
+# complements ChromaDB's semantic search by catching exact keyword matches
 
 import pickle
 import pandas as pd
@@ -18,15 +15,12 @@ _corpus_chunks = None  # keeps the original text for each chunk
 
 
 def _tokenize(text: str) -> list[str]:
-    """Simple whitespace + lowercase tokenizer. Good enough for BM25."""
+    # simple whitespace + lowercase tokenizer, good enough for BM25
     return text.lower().split()
 
 
 def build_index(force_rebuild: bool = False):
-    """
-    Build BM25 index from the same news articles we put into ChromaDB.
-    Saves to disk so we don't have to rebuild every time.
-    """
+    # build BM25 from the same news articles as ChromaDB, saves to disk
     global _bm25, _corpus_chunks
 
     if BM25_INDEX_PATH.exists() and not force_rebuild:
@@ -63,7 +57,7 @@ def build_index(force_rebuild: bool = False):
 
 
 def load_index():
-    """Load a previously built BM25 index from disk."""
+    # load previously built BM25 index from pickle
     global _bm25, _corpus_chunks
 
     if not BM25_INDEX_PATH.exists():
@@ -78,10 +72,7 @@ def load_index():
 
 
 def search(query: str, n_results: int = 10) -> list[dict]:
-    """
-    Keyword search — ranks chunks by term frequency / inverse doc frequency.
-    Returns list of dicts with 'text' and 'score' to match ChromaDB's format.
-    """
+    # keyword search — ranks chunks by TF-IDF scoring
     global _bm25, _corpus_chunks
 
     if _bm25 is None:

@@ -1,12 +1,5 @@
-"""
-Tools that agents can call. Each tool is a LangChain-compatible function
-that the LLM can invoke by name with the right arguments.
-
-We have three main tools:
-  1. sql_query — runs SQL against DuckDB for structured financial data
-  2. semantic_search — hybrid search over news articles
-  3. get_dataset_info — tells the agent what data is available
-"""
+# LangChain-compatible tools the agents can call
+# three tools: sql_query, semantic_search, get_dataset_info
 
 from langchain_core.tools import tool
 from src.data_platform.duckdb_store import run_query, get_schema_info

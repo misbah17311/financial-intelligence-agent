@@ -1,9 +1,5 @@
-"""
-One-shot setup script — run this once to download data, build all indexes,
-and verify everything works.
-
-Usage: python setup.py
-"""
+# One-shot setup script — downloads data, builds indexes, verifies everything
+# Usage: python setup.py
 
 import sys
 import os

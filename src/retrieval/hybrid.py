@@ -1,12 +1,8 @@
-"""
-Hybrid retrieval pipeline:
-  1. Vector search (ChromaDB) — finds chunks by meaning
-  2. Keyword search (BM25) — finds chunks by exact terms
-  3. Reciprocal Rank Fusion — merges both result lists
-  4. Cross-encoder reranking — re-scores the top candidates for precision
-
-This is the main retrieval interface that the agent tools call.
-"""
+# Hybrid retrieval pipeline:
+#   1. Vector search (ChromaDB) for meaning-based matches
+#   2. Keyword search (BM25) for exact term matches
+#   3. Reciprocal Rank Fusion to merge both lists
+#   4. Cross-encoder reranking for final precision
 
 from sentence_transformers import CrossEncoder
 from src.data_platform import chroma_store, bm25_store
@@ -18,7 +14,7 @@ _reranker = None
 
 
 def _get_reranker():
-    """Lazy-load the cross-encoder reranker. ~80MB model."""
+    # lazy-load the cross-encoder reranker (~80MB model)
     global _reranker
     if _reranker is None:
         logger.info("Loading cross-encoder reranker...")
@@ -30,13 +26,8 @@ def reciprocal_rank_fusion(
     result_lists: list[list[dict]],
     k: int = 60,
 ) -> list[dict]:
-    """
-    Merge multiple ranked lists into one using RRF.
-
-    For each document, its RRF score = sum over all lists of 1/(k + rank).
-    Documents that appear in multiple lists get boosted.
-    k=60 is the standard constant from the original RRF paper.
-    """
+    # merge multiple ranked lists using RRF
+    # docs appearing in multiple lists get boosted (k=60 from original paper)
     fused_scores = {}  # text -> cumulative score
     doc_map = {}       # text -> full doc dict (for returning later)
 
@@ -64,12 +55,8 @@ def reciprocal_rank_fusion(
 
 
 def rerank(query: str, documents: list[dict], top_n: int = RERANK_TOP_N) -> list[dict]:
-    """
-    Re-score documents using a cross-encoder.
-    Cross-encoders look at (query, document) pairs together, which is
-    more accurate than independent embedding comparison — but slower,
-    so we only rerank the already-filtered top candidates.
-    """
+    # re-score using cross-encoder (looks at query+doc pairs together)
+    # more accurate than independent embeddings but slower, so only top candidates
     if not documents:
         return []
 
@@ -92,14 +79,8 @@ def hybrid_search(
     top_n: int = RERANK_TOP_N,
     use_reranker: bool = True,
 ) -> dict:
-    """
-    Full hybrid retrieval pipeline.
-
-    Returns a dict with:
-      - 'results': list of top document chunks
-      - 'confidence': HIGH / MEDIUM / LOW / NONE based on scores
-      - 'strategy': description of what retrieval methods were used
-    """
+    # full hybrid retrieval: vector + BM25 → RRF → rerank
+    # returns results list, confidence level, and strategy description
     logger.info(f"Hybrid search: '{query[:80]}...'")
 
     # step 1 — run both searches in parallel (they're independent)
@@ -137,11 +118,7 @@ def hybrid_search(
 
 
 def _assess_confidence(final_results: list[dict], vector_results: list[dict]) -> str:
-    """
-    Determine how confident we are in the retrieval.
-    Uses the original vector similarity scores (0-1 range) as the
-    primary signal since they're normalized and meaningful.
-    """
+    # determine retrieval confidence from vector similarity scores (0–1 range)
     if not vector_results:
         return "NONE"
 

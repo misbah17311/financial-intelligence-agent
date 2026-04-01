@@ -1,7 +1,5 @@
-"""
-Streamlit chat interface for the Financial Intelligence Agent.
-Run with: streamlit run src/ui/app.py
-"""
+# Streamlit chat interface for the Financial Intelligence Agent
+# run with: streamlit run src/ui/app.py
 
 import streamlit as st
 import sys
