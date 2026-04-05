@@ -266,9 +266,15 @@ python evaluation/evaluate.py
 
 ---
 
+## Live Demo
+
+**[Try it live on HuggingFace Spaces](https://huggingface.co/spaces/Misbah17311/financial-intelligence-agent)**
+
+---
+
 ## Demo Video
 
-[Link to demo video](./demo_video.mp4)
+**[Watch the demo video](https://drive.google.com/file/d/1NOO9nch_FABVqzRPzHIq3KNs-QfEPb8y/view?usp=sharing)**
 
 The demo covers:
 1. **Normal flow**: SQL queries, semantic search, complex multi-step analysis
